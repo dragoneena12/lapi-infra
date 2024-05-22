@@ -1,0 +1,12 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: issuer
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: k8s/issuer
+    repoURL: https://github.com/dragoneena12/lapi-infra
+    targetRevision: HEAD
