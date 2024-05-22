@@ -10,3 +10,6 @@ spec:
     path: k8s/issuer
     repoURL: https://github.com/dragoneena12/lapi-infra
     targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true

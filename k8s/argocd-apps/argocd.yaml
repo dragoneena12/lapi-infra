@@ -11,3 +11,8 @@ spec:
     path: k8s/argocd
     repoURL: https://github.com/dragoneena12/lapi-infra
     targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
