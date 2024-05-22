@@ -1,0 +1,5 @@
+---
+- hosts: cp
+  become: true
+  roles:
+  - role: k3s

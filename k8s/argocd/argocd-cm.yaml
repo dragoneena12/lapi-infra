@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  url: https://argocd.lapi.tokyo
+  oidc.config: |
+    name: cognito
+    issuer: https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_tky7r42KU
+    clientID: 52qh0bncfdm2je2rg5uhpe4vuq
+    requestedScopes: ["openid", "email"]
