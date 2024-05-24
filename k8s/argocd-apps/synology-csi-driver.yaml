@@ -12,7 +12,10 @@ spec:
       valuesObject:
         clientInfoSecret:
           create: false
-        volumeSnapshotClasses: {}
+        # TODO: https://github.com/christian-schlichtherle/synology-csi-chart/pull/18 これがマージされたら消す
+        volumeSnapshotClasses:
+          delete:
+            deletionPolicy: Delete
   destination:
     server: "https://kubernetes.default.svc"
     namespace: synology-csi-driver
