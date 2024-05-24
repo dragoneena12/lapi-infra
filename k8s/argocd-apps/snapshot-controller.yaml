@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: snapshot-controller
+spec:
+  destination:
+    namespace: snapshot-controller
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: k8s/snapshot-controller
+    repoURL: https://github.com/dragoneena12/lapi-infra
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
