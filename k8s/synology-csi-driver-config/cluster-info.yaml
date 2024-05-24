@@ -7,7 +7,7 @@ spec:
     kind: ClusterSecretStore
     name: onepassword
   data:
-  - secretKey: client-info.yml
+  - secretKey: client-info.yaml
     remoteRef:
       key: synology-csi-driver-client-info
       property: client-info.yml
