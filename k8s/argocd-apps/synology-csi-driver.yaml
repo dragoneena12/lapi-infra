@@ -12,6 +12,7 @@ spec:
       valuesObject:
         clientInfoSecret:
           create: false
+        volumeSnapshotClasses: {}
   destination:
     server: "https://kubernetes.default.svc"
     namespace: synology-csi-driver
