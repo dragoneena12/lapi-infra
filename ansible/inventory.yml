@@ -1,4 +1,0 @@
-cp:
-  hosts:
-    cp01:
-      ansible_host: lapi-k8s-cp01
