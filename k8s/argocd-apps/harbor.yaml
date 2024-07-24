@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: harbor
+spec:
+  project: default
+  sources:
+    - chart: harbor
+      repoURL: https://helm.goharbor.io
+      targetRevision: 1.14.5
+      helm:
+        releaseName: harbor
+        valueFiles:
+          - $repo/k8s/harbor/values.yaml
+    - repoURL: https://github.com/dragoneena12/lapi-infra
+      targetRevision: main
+      ref: repo
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: harbor
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
