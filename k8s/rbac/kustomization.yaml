@@ -1,2 +1,3 @@
 resources:
 - oidc-cluster-admin.yaml
+- github.yaml
