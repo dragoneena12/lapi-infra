@@ -13,9 +13,13 @@ spec:
       labels:
         app: furport-monitor-prometheus
     spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 1000
+        runAsNonRoot: true
       containers:
       - name: furport-monitor-prometheus
-        image: prom/prometheus:latest
+        image: prom/prometheus:v2.54.1
         ports:
         - containerPort: 9090
           name: http
