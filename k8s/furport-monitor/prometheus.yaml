@@ -1,18 +1,52 @@
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: prometheus
+  name: furport-monitor-prometheus
 spec:
-  serviceAccountName: prometheus
+  selector:
+    matchLabels:
+      app: furport-monitor-prometheus
+  serviceName: furport-monitor-prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: furport-monitor-prometheus
+    spec:
+      containers:
+      - name: furport-monitor-prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /prometheus
+        - name: config
+          mountPath: /etc/prometheus
+      volumes:
+      - name: config
+        configMap:
+          name: furport-monitor-prometheus
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: ConfigMap
 metadata:
-  name: prometheus
----
-apiVersion: monitoring.coreos.com/v1
-kind: Alertmanager
-metadata:
-  name: example
-spec:
-  replicas: 3
+  name: furport-monitor-prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 1m
+      evaluation_interval: 1m
+    scrape_configs:
+    - job_name: 'otlc'
+      static_configs:
+      - targets: ['furport-monitor-collector:8889']
