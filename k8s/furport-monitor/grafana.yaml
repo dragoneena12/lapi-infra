@@ -26,6 +26,12 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/grafana
+        - name: config
+          mountPath: /etc/grafana
+      volumes:
+      - name: config
+        configMap:
+          name: furport-monitor-grafana
   volumeClaimTemplates:
   - metadata:
       name: data
@@ -68,3 +74,12 @@ spec:
   - hosts:
     - furport-grafana.lapi.tokyo
     secretName: furport-monitor-grafana-tls
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: furport-monitor-grafana
+data:
+  grafana.ini: |
+    [server]
+    domain = furport-grafana.lapi.tokyo
