@@ -3,6 +3,7 @@ kind: OpenTelemetryCollector
 metadata:
   name: furport-monitor
 spec:
+  image: opentelemetry-collector-contrib
   config:
     receivers:
       otlp:
