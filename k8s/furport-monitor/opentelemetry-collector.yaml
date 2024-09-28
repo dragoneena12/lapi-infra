@@ -17,6 +17,11 @@ spec:
           - endpoint: https://furport.lapi.tokyo
             method: GET
         collection_interval: 60s
+      hostmetrics:
+        scrapers:
+          cpu:
+          memory:
+          filesystem:
 
     processors: {}
 
@@ -24,7 +29,7 @@ spec:
       debug: {}
       prometheus:
         endpoint: 0.0.0.0:8889
-        namespace: default
+        namespace: otlc
 
     service:
       pipelines:

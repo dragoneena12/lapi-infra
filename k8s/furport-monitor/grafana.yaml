@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: furport-monitor-grafana
+spec:
+  selector:
+    matchLabels:
+      app: furport-monitor-grafana
+  serviceName: furport-monitor-grafana
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: furport-monitor-grafana
+    spec:
+      containers:
+      - name: furport-monitor-grafana
+        image: grafana/grafana-oss:11.1.6
+        ports:
+        - containerPort: 3000
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: furport-monitor-grafana
+spec:
+  selector:
+    app: furport-monitor-grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: furport-monitor-grafana
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: furport-grafana.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: furport-monitor-grafana
+            port:
+              number: 3000
+  tls:  
+  - hosts:
+    - furport-grafana.lapi.tokyo
+    secretName: furport-monitor-grafana-tls
