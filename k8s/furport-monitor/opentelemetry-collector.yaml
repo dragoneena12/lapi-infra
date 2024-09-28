@@ -17,11 +17,6 @@ spec:
           - endpoint: https://furport.lapi.tokyo
             method: GET
         collection_interval: 60s
-      hostmetrics:
-        scrapers:
-          cpu:
-          memory:
-          filesystem:
 
     processors: {}
 

@@ -13,6 +13,10 @@ spec:
       labels:
         app: furport-monitor-grafana
     spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 1000
+        runAsNonRoot: true
       containers:
       - name: furport-monitor-grafana
         image: grafana/grafana-oss:11.1.6
