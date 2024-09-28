@@ -85,5 +85,5 @@ data:
     domain = furport-grafana.lapi.tokyo
     root_url = https://furport-grafana.lapi.tokyo/
 
-    [auth.basic]
-    enabled = false
+    [auth]
+    disable_login_form = true
