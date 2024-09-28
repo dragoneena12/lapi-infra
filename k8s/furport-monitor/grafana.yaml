@@ -83,3 +83,4 @@ data:
   grafana.ini: |
     [server]
     domain = furport-grafana.lapi.tokyo
+    root_url = https://furport-grafana.lapi.tokyo/
