@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudprober
+spec:
+  selector:
+    matchLabels:
+      app: cloudprober
+  template:
+    metadata:
+      labels:
+        app: cloudprober
+    spec:
+      containers:
+      - name: cloudprober
+        image: ghcr.io/cloudprober/cloudprober:v0.13.7
+        ports:
+        - containerPort: 9313
+      volumeMounts:
+        - name: config
+          mountPath: /etc/cloudprober.cfg
+          subPath: cloudprober.cfg
+      volumes:
+      - name: config
+        configMap:
+          name: cloudprober
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudprober
+data:
+  cloudprober.cfg: |
+    probe {
+      name: "furport_frontend"
+      type: HTTP
+      targets {
+        host_names: "furport.lapi.tokyo"
+      }
+      interval_msec: 60000
+      timeout_msec: 10000
+    }

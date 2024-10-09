@@ -3,7 +3,6 @@ kind: OpenTelemetryCollector
 metadata:
   name: furport-monitor
 spec:
-  image: otel/opentelemetry-collector-contrib:0.109.0
   config:
     receivers:
       otlp:
@@ -12,11 +11,12 @@ spec:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-      httpcheck:
-        targets:
-          - endpoint: https://furport.lapi.tokyo
-            method: GET
-        collection_interval: 60s
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'cloudprober'
+            static_configs:
+            - targets: ['cloudprober:9313']
 
     processors: {}
 
