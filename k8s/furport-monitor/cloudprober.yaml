@@ -56,11 +56,13 @@ data:
         }
       }
       latency_unit: "ms"
-      latency_distribution:
-        exponential_buckets:
+      latency_distribution: {
+        exponential_buckets: {
           scale_factor: 1
           base: 2
           num_buckets: 15
+        }
+      }
       interval_msec: 60000
       timeout_msec: 10000
     }
