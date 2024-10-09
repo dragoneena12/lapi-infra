@@ -16,10 +16,10 @@ spec:
         image: ghcr.io/cloudprober/cloudprober:v0.13.7
         ports:
         - containerPort: 9313
-      volumeMounts:
-        - name: config
-          mountPath: /etc/cloudprober.cfg
-          subPath: cloudprober.cfg
+        volumeMounts:
+          - name: config
+            mountPath: /etc/cloudprober.cfg
+            subPath: cloudprober.cfg
       volumes:
       - name: config
         configMap:
