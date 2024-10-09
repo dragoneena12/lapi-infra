@@ -55,7 +55,7 @@ data:
           url: "https://furport-backend-prod.deno.dev/events"
         }
       }
-      latency_unit: ms
+      latency_unit: "ms"
       latency_distribution:
         exponential_buckets:
           scale_factor: 1
