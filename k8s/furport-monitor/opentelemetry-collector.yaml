@@ -33,6 +33,6 @@ spec:
           processors: []
           exporters: [debug]
         metrics:
-          receivers: [httpcheck]
+          receivers: [prometheus]
           processors: []
           exporters: [prometheus]
