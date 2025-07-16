@@ -7,6 +7,7 @@ spec:
   storage:
     type: memory # default
   ingress:
+    ingressClassName: traefik
     hosts:
       - furport-jaegar.lapi.tokyo
     tls:

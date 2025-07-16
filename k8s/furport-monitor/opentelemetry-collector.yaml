@@ -32,7 +32,7 @@ spec:
         traces:
           receivers: [otlp]
           processors: []
-          exporters: [otlp/jaeger]
+          exporters: [jaeger]
         metrics:
           receivers: [prometheus]
           processors: []
