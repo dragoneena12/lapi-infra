@@ -7,8 +7,6 @@ spec:
     receivers:
       otlp:
         protocols:
-          grpc:
-            endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
       prometheus:
@@ -21,7 +19,10 @@ spec:
     processors: {}
 
     exporters:
-      debug: {}
+      jaeger:
+        endpoint: furport-monitor-jaegar:4318
+        tls:
+          insecure: true
       prometheus:
         endpoint: 0.0.0.0:8889
         namespace: otlc
@@ -31,8 +32,42 @@ spec:
         traces:
           receivers: [otlp]
           processors: []
-          exporters: [debug]
+          exporters: [otlp/jaeger]
         metrics:
           receivers: [prometheus]
           processors: []
           exporters: [prometheus]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: furport-monitor-otlp
+spec:
+  selector:
+    app: furport-monitor-otlp
+  ports:
+  - port: 4318
+    targetPort: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: furport-monitor-otlp
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: furport-grafana.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: furport-monitor-otlp
+            port:
+              number: 4318
+  tls:  
+  - hosts:
+    - furport-otlp.lapi.tokyo
+    secretName: furport-monitor-otlp-tls
