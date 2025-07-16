@@ -6,13 +6,37 @@ spec:
   strategy: allInOne # default
   storage:
     type: memory # default
-  ingress:
-    ingressClassName: traefik
-    hosts:
-      - furport-jaegar.lapi.tokyo
-    tls:
-      - hosts:
-          - furport-jaegar.lapi.tokyo
-        secretName: furport-monitor-jaeger-tls
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: furport-monitor-jaeger
+spec:
+  selector:
+    app: furport-monitor-jaeger
+  ports:
+  - port: 4318
+    targetPort: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: furport-monitor-jaeger
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: furport-jaeger.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: furport-monitor-jaeger
+            port:
+              number: 4318
+  tls:  
+  - hosts:
+    - furport-jaeger.lapi.tokyo
+    secretName: furport-monitor-jaeger-tls

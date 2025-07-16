@@ -19,7 +19,7 @@ spec:
     processors: {}
 
     exporters:
-      jaeger:
+      otlp/jaeger:
         endpoint: furport-monitor-jaegar:4318
         tls:
           insecure: true
@@ -32,7 +32,7 @@ spec:
         traces:
           receivers: [otlp]
           processors: []
-          exporters: [jaeger]
+          exporters: [otlp/jaeger]
         metrics:
           receivers: [prometheus]
           processors: []
@@ -57,7 +57,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
   rules:
-  - host: furport-grafana.lapi.tokyo
+  - host: furport-otlp.lapi.tokyo
     http:
       paths:
       - path: /
