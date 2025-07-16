@@ -5,7 +5,7 @@ metadata:
 spec:
   project: default
   source:
-    chart: jaegertracing/jaeger-operator
+    chart: jaeger-operator
     repoURL: https://jaegertracing.github.io/helm-charts
     targetRevision: 2.57.0
   destination:
