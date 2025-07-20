@@ -3,10 +3,16 @@ kind: OpenTelemetryCollector
 metadata:
   name: furport-monitor
 spec:
+  image: jaegertracing/jaeger:latest
+  ports:
+  - name: jaeger
+    port: 16686
   config:
     receivers:
       otlp:
         protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
       prometheus:
@@ -19,24 +25,32 @@ spec:
     processors: {}
 
     exporters:
-      otlp/jaeger:
-        endpoint: furport-monitor-jaegar:4318
-        tls:
-          insecure: true
+      jaeger_storage_exporter:
+        trace_storage: memstore
       prometheus:
         endpoint: 0.0.0.0:8889
         namespace: otlc
 
     service:
+      extensions: [jaeger_storage, jaeger_query]
       pipelines:
         traces:
           receivers: [otlp]
           processors: []
-          exporters: [otlp/jaeger]
+          exporters: [jaeger_storage_exporter]
         metrics:
           receivers: [prometheus]
           processors: []
           exporters: [prometheus]
+    extensions:
+      jaeger_query:
+        storage:
+          traces: memstore
+      jaeger_storage:
+        backends:
+          memstore:
+            memory:
+              max_traces: 100000
 ---
 apiVersion: v1
 kind: Service
@@ -71,3 +85,37 @@ spec:
   - hosts:
     - furport-otlp.lapi.tokyo
     secretName: furport-monitor-otlp-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: furport-monitor-jaeger
+spec:
+  selector:
+    app: furport-monitor-jaeger
+  ports:
+  - port: 16686
+    targetPort: 16686
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: furport-monitor-jaeger
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: furport-jaeger.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: furport-monitor-jaeger
+            port:
+              number: 16686
+  tls:  
+  - hosts:
+    - furport-jaeger.lapi.tokyo
+    secretName: furport-monitor-jaeger-tls
