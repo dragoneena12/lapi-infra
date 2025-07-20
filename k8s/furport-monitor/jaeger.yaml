@@ -2,6 +2,7 @@ apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: furport-monitor-jaeger
+  app: furport-monitor-jaeger
 spec:
   image: jaegertracing/jaeger:latest
   ports:
@@ -45,7 +46,7 @@ metadata:
   name: furport-monitor-otlp
 spec:
   selector:
-    app: furport-monitor-otlp
+    app: furport-monitor-jaeger
   ports:
   - port: 4318
     targetPort: 4318
