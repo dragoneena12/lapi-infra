@@ -1,7 +1,7 @@
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: furport-monitor
+  name: furport-monitor-jaeger
 spec:
   image: jaegertracing/jaeger:latest
   ports:
