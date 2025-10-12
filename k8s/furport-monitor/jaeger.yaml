@@ -38,7 +38,6 @@ spec:
       jaeger_query:
         storage:
           traces: memstore
-        max_clock_skew_adjust: 1s
       jaeger_storage:
         backends:
           memstore:
