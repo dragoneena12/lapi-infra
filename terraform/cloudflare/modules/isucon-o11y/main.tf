@@ -55,3 +55,39 @@ resource "cloudflare_dns_record" "this" {
   ttl     = 1
   comment = "isucon-o11y (terraform/cloudflare)"
 }
+
+# cert-manager の HTTP-01 チャレンジ（Let's Encrypt）はサービストークンを持たないので、
+# このパスだけ Access を素通しする。パスがより具体的なアプリが優先される
+resource "cloudflare_zero_trust_access_policy" "acme_challenge" {
+  account_id = var.account_id
+  name       = "isucon-o11y-acme-challenge"
+  decision   = "bypass"
+
+  include = [
+    {
+      everyone = {}
+    },
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "acme_challenge" {
+  account_id = var.account_id
+  name       = "isucon-o11y-acme-challenge"
+  type       = "self_hosted"
+
+  destinations = [
+    for hostname in var.ingest_hostnames : {
+      type = "public"
+      uri  = "${hostname}/.well-known/acme-challenge"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.acme_challenge.id
+      precedence = 1
+    },
+  ]
+
+  app_launcher_visible = false
+}
