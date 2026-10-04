@@ -14,8 +14,9 @@ spec:
           create: false
         images:
           plugin:
-            # 既存の iSCSI PV がすべて btrfs で、ドライバー v1.4.0 は btrfs 非対応のため v1.3.1 に固定する
-            tag: v1.3.1
+            # v1.4.0 は btrfs 非対応（既存の iSCSI PV はすべて btrfs）、v1.3.1 からは DSM の証明書を検証するが
+            # lapinas は自己署名証明書（CN=synology）なので、NFS に対応した v1.2.1 に固定する
+            tag: v1.2.1
         storageClasses:
           # Helm テスト用の PVC が LUN を消費しないようにする
           iscsi-delete:
