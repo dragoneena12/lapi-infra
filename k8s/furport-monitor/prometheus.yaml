@@ -20,6 +20,12 @@ spec:
       containers:
       - name: furport-monitor-prometheus
         image: prom/prometheus:v2.54.1
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=15d
+        # ボリュームが埋まると WAL の書き出しで panic して起動できなくなるので、容量でも古いデータを消す
+        - --storage.tsdb.retention.size=4GB
         ports:
         - containerPort: 9090
           name: http
@@ -39,7 +45,7 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 1Gi
+          storage: 5Gi
 ---
 apiVersion: v1
 kind: Service
