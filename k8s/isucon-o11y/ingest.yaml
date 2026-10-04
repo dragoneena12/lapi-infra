@@ -1,0 +1,102 @@
+# 競技サーバーの Alloy から push を受ける口。push 用のパスだけを公開する
+# 認証は Cloudflare Access のサービストークン（terraform/cloudflare）
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isucon-o11y-prometheus
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: isucon-prometheus.lapi.tokyo
+    http:
+      paths:
+      - path: /api/v1/write
+        pathType: Exact
+        backend:
+          service:
+            name: isucon-o11y-prometheus
+            port:
+              number: 9090
+  tls:
+  - hosts:
+    - isucon-prometheus.lapi.tokyo
+    secretName: isucon-o11y-prometheus-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isucon-o11y-loki
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: isucon-loki.lapi.tokyo
+    http:
+      paths:
+      - path: /loki/api/v1/push
+        pathType: Exact
+        backend:
+          service:
+            name: isucon-o11y-loki
+            port:
+              number: 3100
+  tls:
+  - hosts:
+    - isucon-loki.lapi.tokyo
+    secretName: isucon-o11y-loki-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isucon-o11y-tempo
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: isucon-tempo.lapi.tokyo
+    http:
+      paths:
+      - path: /v1/traces
+        pathType: Exact
+        backend:
+          service:
+            name: isucon-o11y-tempo
+            port:
+              number: 4318
+  tls:
+  - hosts:
+    - isucon-tempo.lapi.tokyo
+    secretName: isucon-o11y-tempo-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isucon-o11y-pyroscope
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: isucon-pyroscope.lapi.tokyo
+    http:
+      paths:
+      # Alloy の pyroscope.write が使う connect API
+      - path: /push.v1.PusherService/Push
+        pathType: Exact
+        backend:
+          service:
+            name: isucon-o11y-pyroscope
+            port:
+              number: 4040
+      # SDK からの直接 push 用
+      - path: /ingest
+        pathType: Exact
+        backend:
+          service:
+            name: isucon-o11y-pyroscope
+            port:
+              number: 4040
+  tls:
+  - hosts:
+    - isucon-pyroscope.lapi.tokyo
+    secretName: isucon-o11y-pyroscope-tls

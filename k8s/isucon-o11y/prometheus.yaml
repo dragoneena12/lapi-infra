@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: isucon-o11y-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: isucon-o11y-prometheus
+  serviceName: isucon-o11y-prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: isucon-o11y-prometheus
+    spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: isucon-o11y-prometheus
+        image: prom/prometheus:v3.15.0
+        args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=30d
+        - --web.enable-remote-write-receiver
+        - --enable-feature=exemplar-storage
+        ports:
+        - containerPort: 9090
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /prometheus
+        - name: config
+          mountPath: /etc/prometheus
+      volumes:
+      - name: config
+        configMap:
+          name: isucon-o11y-prometheus
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: isucon-o11y-prometheus
+spec:
+  selector:
+    app: isucon-o11y-prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isucon-o11y-prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    storage:
+      tsdb:
+        # 競技サーバーの Alloy が回線断後に WAL から再送しても弾かれないようにする
+        out_of_order_time_window: 30m
+    scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+    - job_name: 'loki'
+      static_configs:
+      - targets: ['isucon-o11y-loki:3100']
+    - job_name: 'tempo'
+      static_configs:
+      - targets: ['isucon-o11y-tempo:3200']
+    - job_name: 'pyroscope'
+      static_configs:
+      - targets: ['isucon-o11y-pyroscope:4040']

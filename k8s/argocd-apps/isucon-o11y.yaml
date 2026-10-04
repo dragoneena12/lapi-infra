@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: isucon-o11y
+spec:
+  project: default
+  source:
+    path: k8s/isucon-o11y
+    repoURL: https://github.com/dragoneena12/lapi-infra
+    targetRevision: HEAD
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: isucon-o11y
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

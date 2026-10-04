@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: isucon-o11y-pyroscope
+spec:
+  selector:
+    matchLabels:
+      app: isucon-o11y-pyroscope
+  serviceName: isucon-o11y-pyroscope
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: isucon-o11y-pyroscope
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
+      containers:
+      - name: isucon-o11y-pyroscope
+        image: grafana/pyroscope:2.3.1
+        args:
+        - -config.file=/etc/pyroscope/config.yaml
+        ports:
+        - containerPort: 4040
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /etc/pyroscope
+      volumes:
+      - name: config
+        configMap:
+          name: isucon-o11y-pyroscope
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: isucon-o11y-pyroscope
+spec:
+  selector:
+    app: isucon-o11y-pyroscope
+  ports:
+  - port: 4040
+    targetPort: 4040
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isucon-o11y-pyroscope
+data:
+  config.yaml: |
+    storage:
+      backend: filesystem
+      filesystem:
+        dir: /data/v2/shared
+
+    metastore:
+      raft:
+        dir: /data/v2/metastore/raft
+      data_dir: /data/v2/metastore/data
+
+    analytics:
+      reporting_enabled: false

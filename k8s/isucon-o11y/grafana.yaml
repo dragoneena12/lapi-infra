@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: isucon-o11y-grafana
+spec:
+  selector:
+    matchLabels:
+      app: isucon-o11y-grafana
+  serviceName: isucon-o11y-grafana
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: isucon-o11y-grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsNonRoot: true
+      containers:
+      - name: isucon-o11y-grafana
+        image: grafana/grafana:13.2.3
+        env:
+        - name: GF_SERVER_DOMAIN
+          value: isucon-grafana.lapi.tokyo
+        - name: GF_SERVER_ROOT_URL
+          value: https://isucon-grafana.lapi.tokyo/
+        - name: GF_ANALYTICS_REPORTING_ENABLED
+          value: "false"
+        # ログインは Cognito (terraform/aws) の OIDC のみ。パスワード認証は無効
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "true"
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "false"
+        - name: GF_AUTH_OAUTH_AUTO_LOGIN
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_NAME
+          value: Cognito
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: isucon-o11y
+              key: grafana-oauth-client-id
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: isucon-o11y
+              key: grafana-oauth-client-secret
+        - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+          value: openid email profile
+        - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+          value: https://lapi-isucon.auth.ap-northeast-1.amazoncognito.com/oauth2/authorize
+        - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+          value: https://lapi-isucon.auth.ap-northeast-1.amazoncognito.com/oauth2/token
+        - name: GF_AUTH_GENERIC_OAUTH_API_URL
+          value: https://lapi-isucon.auth.ap-northeast-1.amazoncognito.com/oauth2/userInfo
+        - name: GF_AUTH_GENERIC_OAUTH_USE_PKCE
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH
+          value: email
+        - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+          value: contains(not_null("cognito:groups", `[]`), 'grafana-admin') && 'Admin' || contains(not_null("cognito:groups", `[]`), 'grafana-editor') && 'Editor' || 'Viewer'
+        - name: GF_AUTH_SIGNOUT_REDIRECT_URL
+          value: https://lapi-isucon.auth.ap-northeast-1.amazoncognito.com/logout?client_id=$(GF_AUTH_GENERIC_OAUTH_CLIENT_ID)&logout_uri=https%3A%2F%2Fisucon-grafana.lapi.tokyo%2Flogin
+        ports:
+        - containerPort: 3000
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/grafana
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+      - name: datasources
+        configMap:
+          name: isucon-o11y-grafana-datasources
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: isucon-o11y-grafana
+spec:
+  selector:
+    app: isucon-o11y-grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: isucon-o11y-grafana
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: isucon-grafana.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: isucon-o11y-grafana
+            port:
+              number: 3000
+  tls:
+  - hosts:
+    - isucon-grafana.lapi.tokyo
+    secretName: isucon-o11y-grafana-tls
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: isucon-o11y-grafana-datasources
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      uid: prometheus
+      access: proxy
+      url: http://isucon-o11y-prometheus:9090
+      isDefault: true
+      editable: false
+      jsonData:
+        httpMethod: POST
+        exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+    - name: Loki
+      type: loki
+      uid: loki
+      access: proxy
+      url: http://isucon-o11y-loki:3100
+      editable: false
+      jsonData:
+        maxLines: 5000
+        derivedFields:
+        - name: trace_id
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo
+          url: "$${__value.raw}"
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      access: proxy
+      url: http://isucon-o11y-tempo:3200
+      editable: false
+      jsonData:
+        serviceMap:
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+        streamingEnabled:
+          search: true
+          metrics: true
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: -1m
+          spanEndTimeShift: 1m
+          filterByTraceID: true
+        tracesToProfiles:
+          datasourceUid: pyroscope
+          profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+    - name: Pyroscope
+      type: grafana-pyroscope-datasource
+      uid: pyroscope
+      access: proxy
+      url: http://isucon-o11y-pyroscope:4040
+      editable: false
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: isucon-o11y
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  data:
+  - secretKey: grafana-oauth-client-id
+    remoteRef:
+      key: isucon-o11y
+      property: grafana-oauth-client-id
+  - secretKey: grafana-oauth-client-secret
+    remoteRef:
+      key: isucon-o11y
+      property: grafana-oauth-client-secret
