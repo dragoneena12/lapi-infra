@@ -21,16 +21,19 @@ spec:
           # Helm テスト用の PVC が LUN を消費しないようにする
           iscsi-delete:
             test: false
-          # NFS の共有フォルダは root:root で作られるので、非 root のコンテナも書き込めるようにする
+          # DSM の共有フォルダは ACL で administrators のみ許可されていて、クライアントから chmod すると Unix の権限に切り替わる。
+          # ドライバーは権限ビットが違うときだけ chmod するが、DSM は 0777 と報告するので 0777 だと chmod されない。
+          # 2777 にすると v1.2.1 では毎回 chmod される（実際の権限は 0777）
+          # https://github.com/SynologyOpenSource/synology-csi/issues/30
           nfs-delete:
             test: false
             parameters:
               protocol: nfs
-              mountPermissions: "0777"
+              mountPermissions: "2777"
           nfs-retain:
             parameters:
               protocol: nfs
-              mountPermissions: "0777"
+              mountPermissions: "2777"
           smb-delete:
             disabled: true
           smb-retain:
