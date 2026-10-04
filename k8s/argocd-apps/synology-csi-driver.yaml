@@ -7,15 +7,25 @@ spec:
   source:
     chart: synology-csi
     repoURL: https://christian-schlichtherle.github.io/synology-csi-chart
-    targetRevision: 0.9.8
+    targetRevision: 0.11.4
     helm:
       valuesObject:
         clientInfoSecret:
           create: false
-        # TODO: https://github.com/christian-schlichtherle/synology-csi-chart/pull/18 これがマージされたら消す
-        volumeSnapshotClasses:
-          delete:
-            deletionPolicy: Delete
+        images:
+          plugin:
+            # 既存の iSCSI PV がすべて btrfs で、ドライバー v1.4.0 は btrfs 非対応のため v1.3.1 に固定する
+            tag: v1.3.1
+        storageClasses:
+          # Helm テスト用の PVC が LUN を消費しないようにする
+          iscsi-delete:
+            test: false
+          nfs-delete:
+            test: false
+          smb-delete:
+            disabled: true
+          smb-retain:
+            disabled: true
   destination:
     server: "https://kubernetes.default.svc"
     namespace: synology-csi-driver
