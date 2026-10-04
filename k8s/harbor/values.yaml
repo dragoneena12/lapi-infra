@@ -188,17 +188,18 @@ persistence:
       # Specify the "storageClass" used to provision the volume. Or the default
       # StorageClass will be used (the default).
       # Set it to "-" to disable dynamic provisioning
-      storageClass: ""
+      # DB 以外は NFS に置く（LUN の上限対策）。RWX にしてローリング更新でも新旧 Pod が同時にマウントできるようにする
+      storageClass: "synology-csi-driver-nfs-retain"
       subPath: ""
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       size: 5Gi
       annotations: {}
     jobservice:
       jobLog:
         existingClaim: ""
-        storageClass: ""
+        storageClass: "synology-csi-driver-nfs-retain"
         subPath: ""
-        accessMode: ReadWriteOnce
+        accessMode: ReadWriteMany
         size: 1Gi
         annotations: {}
     # If external database is used, the following settings for database will
@@ -214,14 +215,14 @@ persistence:
     # be ignored
     redis:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "synology-csi-driver-nfs-retain"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 1Gi
       annotations: {}
     trivy:
       existingClaim: ""
-      storageClass: ""
+      storageClass: "synology-csi-driver-nfs-retain"
       subPath: ""
       accessMode: ReadWriteOnce
       size: 5Gi
