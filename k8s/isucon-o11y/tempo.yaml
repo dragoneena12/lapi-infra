@@ -43,6 +43,7 @@ spec:
   - metadata:
       name: data
     spec:
+      storageClassName: synology-csi-driver-nfs-retain
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
