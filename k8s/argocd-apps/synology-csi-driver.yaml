@@ -21,8 +21,16 @@ spec:
           # Helm テスト用の PVC が LUN を消費しないようにする
           iscsi-delete:
             test: false
+          # NFS の共有フォルダは root:root で作られるので、非 root のコンテナも書き込めるようにする
           nfs-delete:
             test: false
+            parameters:
+              protocol: nfs
+              mountPermissions: "0777"
+          nfs-retain:
+            parameters:
+              protocol: nfs
+              mountPermissions: "0777"
           smb-delete:
             disabled: true
           smb-retain:
