@@ -12,3 +12,9 @@ terraform {
 
 # 認証は環境変数 CLOUDFLARE_API_TOKEN
 provider "cloudflare" {}
+
+# kemofest.tokyo は別のアカウントにあるので、トークンを分ける
+provider "cloudflare" {
+  alias     = "kemofest"
+  api_token = var.kemofest_cloudflare_api_token
+}

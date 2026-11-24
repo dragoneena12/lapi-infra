@@ -82,7 +82,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt
 spec:
   rules:
-  - host: tkf-harness.lapi.tokyo
+  - host: harness.kemofest.tokyo
     http:
       paths:
       - path: /
@@ -94,5 +94,5 @@ spec:
               number: 8080
   tls:
   - hosts:
-    - tkf-harness.lapi.tokyo
+    - harness.kemofest.tokyo
     secretName: tkf-harness-tls
