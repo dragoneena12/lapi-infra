@@ -23,6 +23,16 @@ spec:
         fsGroup: 65532
         runAsNonRoot: true
       initContainers:
+      # ストレージクラスに fsType がなく fsGroup が効かないので、ボリュームを nonroot の持ち物にする
+      - name: chown
+        image: busybox:1.37
+        command: ["chown", "65532:65532", "/data"]
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        volumeMounts:
+        - name: data
+          mountPath: /data
       - name: migrate
         image: harbor.lapi.tokyo/tkf/harness:sha-4090bda
         command: ["migrate", "-path", "/migrations", "-database", "sqlite:///data/harness.db", "up"]
