@@ -1,0 +1,88 @@
+# ケモフェスの運営ハーネス（https://github.com/dragoneena12/tkf-harness）のダッシュボード
+# ダッシュボード自体に認証はないので、Cloudflare Access（terraform/cloudflare）で守る
+# CLI は kubectl exec -n tkf-harness tkf-harness-0 -- tkf task list のように実行する
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tkf-harness
+spec:
+  selector:
+    matchLabels:
+      app: tkf-harness
+  serviceName: tkf-harness
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tkf-harness
+    spec:
+      securityContext:
+        # distroless の nonroot
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        runAsNonRoot: true
+      initContainers:
+      - name: migrate
+        image: harbor.lapi.tokyo/tkf/harness:sha-4090bda
+        command: ["migrate", "-path", "/migrations", "-database", "sqlite:///data/harness.db", "up"]
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: tkf-harness
+        image: harbor.lapi.tokyo/tkf/harness:sha-4090bda
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      # SQLite のロックが NFS では当てにならないので iSCSI にする
+      storageClassName: synology-csi-driver-iscsi-retain
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tkf-harness
+spec:
+  selector:
+    app: tkf-harness
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tkf-harness
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: tkf-harness.lapi.tokyo
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tkf-harness
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - tkf-harness.lapi.tokyo
+    secretName: tkf-harness-tls

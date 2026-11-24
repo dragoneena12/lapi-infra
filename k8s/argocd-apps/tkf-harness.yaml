@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tkf-harness
+spec:
+  project: default
+  source:
+    path: k8s/tkf-harness
+    repoURL: https://github.com/dragoneena12/lapi-infra
+    targetRevision: HEAD
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: tkf-harness
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
